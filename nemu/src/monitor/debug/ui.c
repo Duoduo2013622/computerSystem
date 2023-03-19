@@ -41,7 +41,7 @@ static int cmd_help(char *args);
 
 static int cmd_si(char *args){
   int steps;
-  if (args ==null){
+  if (args ==NULL){
     steps=1;
   }
   else { 
@@ -51,7 +51,23 @@ static int cmd_si(char *args){
   return 0;
 }
 	
+static int cmd_info(char *args) {
+  if (args[0] == 'r') {
+     printf("General reg: ----------------------------------------------------------- \n");
+     int i;
+     for (i = 0; i <= 8 ; i++) {
+	printf("$%s\t0x%08x\n", regsl[i], reg_l(i));
+     }
+     printf("Special reg: ----------------------------------------------------------- \n");	
+     printf("$eip\t0x%08x\n", cpu.eip);
+  }
+  if (args[0] == 'w'){
 
+        //TODO:
+  }
+  return 0;
+
+}
 
 static struct {
   char *name;
@@ -63,7 +79,7 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   /* TODO: Add more commands */
   { "si", "Pause the execution after stepping N commands", cmd_si},
-
+  { "info", "Print registers status", cmd_info},
 };
 
 #define NR_CMD (sizeof(cmd_table) / sizeof(cmd_table[0]))
