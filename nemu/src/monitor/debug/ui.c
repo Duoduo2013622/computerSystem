@@ -62,11 +62,32 @@ static int cmd_info(char *args) {
      printf("$eip\t0x%08x\t%d\n", cpu.eip, cpu.eip);
   }
   if (args[0] == 'w'){
-
         //TODO:
   }
   return 0;
+}
 
+static int cmd_x(char* args){
+  if (args == NULL) {
+    printf("ERORR!\n");
+    return 0;
+  }
+  int num, addr;
+  sscanf(args, "%d %x", &num, &addr);
+  int j=0;
+  for (int i = 0; i < num; i++) {
+    if (j % 4 == 0){
+      printf("0x%x:\t", addr);
+    }
+    printf("0x%08x ", vaddr_read(addr, 4));
+    addr +=4;
+    j++;
+    if ( j % 4 == 0){
+      printf ("\n");
+    }
+  }
+  printf("\n");
+  return 0;
 }
 
 static struct {
