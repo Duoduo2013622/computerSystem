@@ -55,7 +55,7 @@ static int cmd_info(char *args) {
   if (args[0] == 'r') {
      printf("General reg: ----------------------------------------------------------- \n");
      int i;
-     for (i = 0; i <= 8 ; i++) {
+     for (i = 0; i < 8 ; i++) {
 	printf("$%s\t0x%08x\n", regsl[i], reg_l(i));
      }
      printf("Special reg: ----------------------------------------------------------- \n");	
