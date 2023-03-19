@@ -56,10 +56,10 @@ static int cmd_info(char *args) {
      printf("General reg: ----------------------------------------------------------- \n");
      int i;
      for (i = 0; i < 8 ; i++) {
-	printf("$%s\t0x%08x\n", regsl[i], reg_l(i));
+	printf("$%s\t0x%08x\t%d\n", regsl[i], reg_l(i),reg_l(i) );
      }
      printf("Special reg: ----------------------------------------------------------- \n");	
-     printf("$eip\t0x%08x\n", cpu.eip);
+     printf("$eip\t0x%08x\t%d\n", cpu.eip, cpu.eip);
   }
   if (args[0] == 'w'){
 
