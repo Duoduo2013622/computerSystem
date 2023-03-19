@@ -101,6 +101,7 @@ static struct {
   /* TODO: Add more commands */
   { "si", "Pause the execution after stepping N commands", cmd_si},
   { "info", "Print registers status", cmd_info},
+  { "x", "Scan memory", cmd_x},
 };
 
 #define NR_CMD (sizeof(cmd_table) / sizeof(cmd_table[0]))
