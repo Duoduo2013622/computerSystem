@@ -10,7 +10,13 @@ enum {
   TK_NOTYPE = 256, TK_EQ
 
   /* TODO: Add more token types */
-
+  TK_NUM,
+  TK_REGISTER,
+  TK_HEX,
+  TK_NOTEQ,
+  TK_OR,
+  TK_AND,
+  TK_NEG
 };
 
 static struct rule {
@@ -24,7 +30,22 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
+  {"\\-", '-'},
+  {"\\*", '*'},
+  {"\\/", '/'},
+
+  {"\\$[a-z]+", TK_REGISTER},
+  {"0[xX][0-9a-fA-F]+", TK_HEX},
+  {"[0-9]+", TK_NUM},
+
   {"==", TK_EQ}         // equal
+  {"!=", TK_NOTEQ},
+
+  {"\\(", '('},
+  {"\\)", ')'},
+  {"\\|\\|", TK_OR},
+  {"&&", TK_AND},
+  {"!", '!'},
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -80,7 +101,71 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-          default: TODO();
+	case TK_NUM:
+		tokens[nr_token].type = TK_NUM;
+		strncpy(tokens[nr_token].str, substr_start,substr_len);
+		nr_token++;
+		break;
+	case TK_REGISTER:
+		tokens[nr_token].type = TK_REGISTER;
+		strncpy(tokens[nr_token].str, substr_start, substr_len);
+		nr_token++;
+		break;
+	case TK_HEX:
+		tokens[nr_token].type = TK_HEX;
+		strncpy(tokens[nr_token].str, substr_start, substr_len);
+		nr_token++;
+		break;
+	case TK_EQ:
+		tokens[nr_token].type = TK_EQ;
+		strcpy(tokens[nr_token].str, "==");
+		nr_token++;
+		break;
+	case TK_NOTEQ:
+		tokens[nr_token].type = TK_NOTEQ;
+		strcpy(tokens[nr_token].str, "!=");
+		nr_token++;
+		break;
+	case TK_OR:
+		tokens[nr_token].type = TK_OR;
+		strcpy(tokens[nr_token].str, "||");
+		nr_token++;
+		break;
+	case TK_AND:
+		tokens[nr_token].type = TK_AND;
+		strcpy(tokens[nr_token].str, "&&");
+		nr_token++;
+		break;
+	case '+':
+		tokens[nr_token].type = '+';
+		nr_token++;
+		break;
+	case '-':
+		tokens[nr_token].type = '-';
+		nr_token++;
+		break;
+	case '*':
+		tokens[nr_token].type = '*';
+		nr_token++;
+		break;
+	case '/':
+		tokens[nr_token].type = '/';
+		nr_token++;
+		break;
+	case '!':
+		tokens[nr_token].type = '!';
+		nr_token++;
+		break;
+	case '(':
+		tokens[nr_token].type = '(';
+		nr_token++;
+		break;
+	case ')':
+		tokens[nr_token].type = ')';
+		nr_token++;
+		break;
+	default: 
+		assert(0);
         }
 
         break;
