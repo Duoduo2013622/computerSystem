@@ -317,7 +317,6 @@ uint32_t eval(int p, int q){
     } else {
     	assert(0);
     }
- }
   }
   uint32_t val1, val2;
   val1 = eval(p, op_index - 1);
@@ -344,6 +343,7 @@ uint32_t eval(int p, int q){
         }
   default : assert(0);
   }
+ }
   return 0;
 }
 uint32_t expr(char *e, bool *success) {
