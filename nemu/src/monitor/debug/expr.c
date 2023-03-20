@@ -181,6 +181,75 @@ static bool make_token(char *e) {
   return true;
 }
 
+bool check_parentheses(int p, int q){
+  int unmatched = 0;
+  if (tokens[p].type == '(' || tokens[q].type == ')'){
+    for (int i = p; i <= q; i++){
+      if (tokens[i].type == '('){
+        unmatched++;
+      }
+      if (tokens[i].type == ')'){
+        unmatched--;
+      }
+      if (a != q && unmatched == 0){
+        return false;
+      }
+    }
+    if (unmatched == 0){
+      return true;
+    } else {
+       return false;
+    }
+  }
+  return false;
+}
+
+
+int dominant_operator(int p, int q){
+  int unmatched = 0;
+  int op_index = -1;
+  int priority = 0;
+  for (int i = p; i <= q; i++){
+    if (tokens[i].type == '('){
+      unmatched++;
+    }
+    if (tokens[i].type == ')'){
+      unmatched--;
+    }	
+    if (unmatched == 0){
+    if (tokens[i].type == TK_OR){
+      if (priority < 5){
+        op_index = i;
+        priority = 5;
+      }
+    } else if (tokens[i].type == TK_AND){
+      if (priority < 4){    
+        op_index = i;
+        priority = 4;
+      }
+    } else if (tokens[i].type == TK_EQ || tokens[i].type == TK_NOTEQ){
+      if (priority < 3){
+        op_index = i;
+        priority = 3;
+      }
+    } else if (tokens[i].type == '+' || tokens[i].type == '-'){
+      if (priority < 2){
+        op_index = i;
+        priority = 2;
+    }
+    } else if (tokens[i].type == '*' || tokens[i].type == '/'){
+      if (priority < 1){
+        op_index = i;
+        priority = 1;
+      }
+    }
+    else if (unmatched < 0){
+      return -2;
+    }
+  }
+  }
+  return op_index;
+}
 uint32_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
