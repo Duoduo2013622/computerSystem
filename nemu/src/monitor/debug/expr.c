@@ -306,15 +306,6 @@ uint32_t eval(int p, int q){
     if (op_index == -2){
         assert(0);
     } 
-    else if (op_index == -1){
-        if (tokens[p].type == TK_NUM){
-           sscanf(tokens[q].str , "%d" ,&result);
-           return -result;}
-
-        else if (tokens[p].type == TK_NEG){
-           sscanf(tokens[q].str , "%d" ,&result);
-           return -result;}
-       }
     else if (tokens[p].type == TK_REGISTER) {
       if (!strcmp(tokens[p].str, "$eax")){
     	return cpu.eax;
