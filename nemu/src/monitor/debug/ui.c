@@ -89,6 +89,17 @@ static int cmd_x(char* args){
   printf("\n");
   return 0;
 }
+static int cmd_p(char *args){
+  bool *success = true;
+  uint32_t result = expr (args, success);
+  if (!success) {
+    printf("wrong!\n");
+  }
+  else {
+    printf("%u\n",result);
+  }
+  return 0;
+}
 
 static struct {
   char *name;
@@ -102,6 +113,7 @@ static struct {
   { "si", "Pause the execution after stepping N commands", cmd_si},
   { "info", "Print registers status", cmd_info},
   { "x", "Scan memory", cmd_x},
+  { "p", "Expression evaluation", cmd_p},
 };
 
 #define NR_CMD (sizeof(cmd_table) / sizeof(cmd_table[0]))
