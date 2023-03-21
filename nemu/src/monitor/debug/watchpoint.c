@@ -79,4 +79,24 @@ bool checkWP(){
 	return check;
 }
 
+void printf_wp(){
+	WP *temp = head;
+	if (temp == NULL){
+		printf("No watchpoints\n");
+	}
+	while (temp != NULL){
+		printf("Watch point %d: %s\n", temp->NO, temp->expr);
+		temp = temp->next;
+	}
+}
 
+WP* delete_wp(int p, bool *key){
+	WP *temp = head;
+	while (temp != NULL && temp->NO != p){
+		temp = temp->next;
+	}
+	if (temp == NULL){
+		*key = false;
+	}
+	return temp;
+}
