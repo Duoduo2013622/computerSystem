@@ -262,7 +262,16 @@ uint32_t eval(int p, int q){
       int result = 0;
       sscanf(tokens[p].str, "%u", &result);
       return result;
-    } 
+    }
+	else if (tokens[p].type == TK_HEX){
+		int i = 2;
+		int result = 0;
+		while (tokens[p].str[i]!=0){
+			result *=16;
+			result += tokens[p].str[i] <58 ? tokens[p].str[i]-'0':tokens[p].str[i] - 'a' +10;
+			i++;
+		}
+	} 
     else if (tokens[p].type == TK_REGISTER){
       if (!strcmp(tokens[p].str, "$eax")){
         return cpu.eax;
