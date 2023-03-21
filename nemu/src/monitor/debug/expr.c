@@ -16,7 +16,8 @@ enum {
   TK_NOTEQ=4,
   TK_OR=5,
   TK_AND=6,
-  TK_NEG=7
+  TK_NEG=7,
+  TK_POINT=8
 };
 
 static struct rule {
@@ -179,6 +180,16 @@ static bool make_token(char *e) {
       return false;
     }
   }
+  for (int i = 0; i < nr_token; i ++) {
+
+		if (tokens[i].type == '*' && (i == 0 || (tokens[i - 1].type != TK_NUM && tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_REGISTER && tokens[i - 1].type !=')') )) {
+
+			tokens[i].type = TK_POINT;
+		}
+		if (tokens[i].type == '-' && (i == 0 || (tokens[i - 1].type != TK_NUM && tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_REGISTER && tokens[i - 1].type !=')') )) {
+			tokens[i].type = TK_NEG;
+		}
+	}
 
   return true;
 }
@@ -306,6 +317,48 @@ uint32_t eval(int p, int q){
     if (op_index == -2){
         assert(0);
     } 
+  else if (op_index == -1){
+
+	if (tokens[p].type == '!'){
+		sscanf(tokens[q].str, "%d", &result);
+		return !result;
+	}
+	else if(tokens[p].type == TK_NEG){
+		sscanf(tokens[q].str, "%d", &result);
+		return -result;
+	}
+	else if(tokens[p].type == TK_POINT){
+		if (!strcmp(tokens[q].str, "$eax")){
+			result = vaddr_read(cpu.eax, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$ecx")){
+			result = vaddr_read(cpu.ecx, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$edx")){
+			result = vaddr_read(cpu.edx, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$ebx")){
+			result = vaddr_read(cpu.ebx, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$esp")){
+			result = vaddr_read(cpu.esp, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$ebp")){
+			
+			result = vaddr_read(cpu.ebp, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$esi")){
+			result = vaddr_read(cpu.esi, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$edi")){
+			result = vaddr_read(cpu.edi, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$eip")){
+			result = vaddr_read(cpu.eip, 4);
+			return result;
+		}
+	}
+}
     else if (tokens[p].type == TK_REGISTER) {
       if (!strcmp(tokens[p].str, "$eax")){
     	return cpu.eax;
