@@ -104,7 +104,19 @@ static int cmd_p(char *args){
   }
   return 0;
 }
-
+static int cmd_w(char* args) {
+  bool success = true;
+  uint32_t result = expr(args, &success);
+  if(!success) {
+    printf("wrong expression!\n");
+    return -1;
+  }
+  WP* wp = new_wp();
+  wp->result = result;
+  strcpy(wp->expr, args);
+  printf("watchpoint %d: %s\n", wp->NO, wp->expr);
+  return 0;
+}
 static int cmd_d(char *args){
 	int p;
 	bool key = true;
@@ -134,6 +146,7 @@ static struct {
   { "info", "Print registers status", cmd_info},
   { "x", "Scan memory", cmd_x},
   { "p", "Expression evaluation", cmd_p},
+  { "w", "new a watchpoint", cmd_w},
   { "d", "Delete watchpoint", cmd_d},
 };
 
