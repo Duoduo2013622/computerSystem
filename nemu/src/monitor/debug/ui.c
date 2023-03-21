@@ -72,8 +72,11 @@ static int cmd_x(char* args){
     printf("ERORR!\n");
     return 0;
   }
-  int num, addr;
-  sscanf(args, "%d %x", &num, &addr);
+  int num;
+  char exp[100];
+  bool success = true;
+  sscanf(args, "%d %s", &num, exp);
+  uint32_t addr = expr(exp, &success);
   int j=0;
   for (int i = 0; i < num; i++) {
     if (j % 4 == 0){
