@@ -7,16 +7,16 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ
+  TK_NOTYPE = 256, TK_EQ,
 
   /* TODO: Add more token types */
-  TK_NUM,
-  TK_REGISTER,
-  TK_HEX,
-  TK_NOTEQ,
-  TK_OR,
-  TK_AND,
-  TK_NEG
+  TK_NUM=1,
+  TK_REGISTER=2,
+  TK_HEX=3,
+  TK_NOTEQ=4,
+  TK_OR=5,
+  TK_AND=6,
+  TK_NEG=7
 };
 
 static struct rule {
@@ -38,7 +38,7 @@ static struct rule {
   {"0[xX][0-9a-fA-F]+", TK_HEX},
   {"[0-9]+", TK_NUM},
 
-  {"==", TK_EQ}         // equal
+  {"==", TK_EQ},         // equal
   {"!=", TK_NOTEQ},
 
   {"\\(", '('},
@@ -191,7 +191,7 @@ bool check_parentheses(int p, int q){
       if (tokens[i].type == ')'){
         unmatched--;
       }
-      if (a != q && unmatched == 0){
+      if (i != q && unmatched == 0){
         return false;
       }
     }
