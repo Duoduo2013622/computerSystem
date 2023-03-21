@@ -254,18 +254,17 @@ int dominant_operator(int p, int q){
 }
 
 uint32_t eval(int p, int q){
+  int result = 0;
   if (p > q){
     assert(0);
   } 
   else if (p == q){
     if (tokens[p].type == TK_NUM){
-      int result = 0;
       sscanf(tokens[p].str, "%u", &result);
       return result;
     }
 	else if (tokens[p].type == TK_HEX){
 		int i = 2;
-		int result = 0;
 		while (tokens[p].str[i]!=0){
 			result *=16;
 			result += tokens[p].str[i] <58 ? tokens[p].str[i]-'0':tokens[p].str[i] - 'a' +10;
@@ -307,6 +306,15 @@ uint32_t eval(int p, int q){
     if (op_index == -2){
         assert(0);
     } 
+    else if (op_index == -1){
+        if (tokens[p].type == TK_NUM){
+           sscanf(tokens[q].str , "%d" ,&result);
+           return -result;}
+
+        else if (tokens[p].type == TK_NEG){
+           sscanf(tokens[q].str , "%d" ,&result);
+           return -result;}
+       }
     else if (tokens[p].type == TK_REGISTER) {
       if (!strcmp(tokens[p].str, "$eax")){
     	return cpu.eax;
