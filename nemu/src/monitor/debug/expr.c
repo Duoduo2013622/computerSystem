@@ -7,10 +7,17 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ
+  TK_NOTYPE = 256, TK_EQ,
 
   /* TODO: Add more token types */
-
+  TK_NUM=1,
+  TK_REGISTER=2,
+  TK_HEX=3,
+  TK_NOTEQ=4,
+  TK_OR=5,
+  TK_AND=6,
+  TK_NEG=7,
+  TK_POINT=8
 };
 
 static struct rule {
@@ -24,7 +31,22 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
-  {"==", TK_EQ}         // equal
+  {"\\-", '-'},
+  {"\\*", '*'},
+  {"\\/", '/'},
+
+  {"\\$[a-z]+", TK_REGISTER},
+  {"0[xX][0-9a-fA-F]+", TK_HEX},
+  {"[0-9]+", TK_NUM},
+
+  {"==", TK_EQ},         // equal
+  {"!=", TK_NOTEQ},
+
+  {"\\(", '('},
+  {"\\)", ')'},
+  {"\\|\\|", TK_OR},
+  {"&&", TK_AND},
+  {"!", '!'},
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -80,7 +102,73 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-          default: TODO();
+	case TK_NOTYPE:
+		break;
+	case TK_NUM:
+		tokens[nr_token].type = TK_NUM;
+		strncpy(tokens[nr_token].str, substr_start,substr_len);
+		nr_token++;
+		break;
+	case TK_REGISTER:
+		tokens[nr_token].type = TK_REGISTER;
+		strncpy(tokens[nr_token].str, substr_start, substr_len);
+		nr_token++;
+		break;
+	case TK_HEX:
+		tokens[nr_token].type = TK_HEX;
+		strncpy(tokens[nr_token].str, substr_start, substr_len);
+		nr_token++;
+		break;
+	case TK_EQ:
+		tokens[nr_token].type = TK_EQ;
+		strcpy(tokens[nr_token].str, "==");
+		nr_token++;
+		break;
+	case TK_NOTEQ:
+		tokens[nr_token].type = TK_NOTEQ;
+		strcpy(tokens[nr_token].str, "!=");
+		nr_token++;
+		break;
+	case TK_OR:
+		tokens[nr_token].type = TK_OR;
+		strcpy(tokens[nr_token].str, "||");
+		nr_token++;
+		break;
+	case TK_AND:
+		tokens[nr_token].type = TK_AND;
+		strcpy(tokens[nr_token].str, "&&");
+		nr_token++;
+		break;
+	case '+':
+		tokens[nr_token].type = '+';
+		nr_token++;
+		break;
+	case '-':
+		tokens[nr_token].type = '-';
+		nr_token++;
+		break;
+	case '*':
+		tokens[nr_token].type = '*';
+		nr_token++;
+		break;
+	case '/':
+		tokens[nr_token].type = '/';
+		nr_token++;
+		break;
+	case '!':
+		tokens[nr_token].type = '!';
+		nr_token++;
+		break;
+	case '(':
+		tokens[nr_token].type = '(';
+		nr_token++;
+		break;
+	case ')':
+		tokens[nr_token].type = ')';
+		nr_token++;
+		break;
+	default: 
+		assert(0);
         }
 
         break;
@@ -92,10 +180,236 @@ static bool make_token(char *e) {
       return false;
     }
   }
+  for (int i = 0; i < nr_token; i ++) {
+
+		if (tokens[i].type == '*' && (i == 0 || (tokens[i - 1].type != TK_NUM && tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_REGISTER && tokens[i - 1].type !=')') )) {
+
+			tokens[i].type = TK_POINT;
+		}
+		if (tokens[i].type == '-' && (i == 0 || (tokens[i - 1].type != TK_NUM && tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_REGISTER && tokens[i - 1].type !=')') )) {
+			tokens[i].type = TK_NEG;
+		}
+	}
 
   return true;
 }
 
+bool check_parentheses(int p, int q){
+  int unmatched = 0;
+  if (tokens[p].type == '(' || tokens[q].type == ')'){
+    for (int i = p; i <= q; i++){
+      if (tokens[i].type == '('){
+        unmatched++;
+      }
+      if (tokens[i].type == ')'){
+        unmatched--;
+      }
+      if (i != q && unmatched == 0){
+        return false;
+      }
+    }
+    if (unmatched == 0){
+      return true;
+    } else {
+       return false;
+    }
+  }
+  return false;
+}
+
+
+int dominant_operator(int p, int q){
+  int unmatched = 0;
+  int op_index = -1;
+  int priority = 0;
+  for (int i = p; i <= q; i++){
+    if (tokens[i].type == '('){
+      unmatched++;
+    }
+    if (tokens[i].type == ')'){
+      unmatched--;
+    }	
+    if (unmatched == 0){
+    if (tokens[i].type == TK_OR){
+      if (priority < 5){
+        op_index = i;
+        priority = 5;
+      }
+    } else if (tokens[i].type == TK_AND){
+      if (priority < 4){    
+        op_index = i;
+        priority = 4;
+      }
+    } else if (tokens[i].type == TK_EQ || tokens[i].type == TK_NOTEQ){
+      if (priority < 3){
+        op_index = i;
+        priority = 3;
+      }
+    } else if (tokens[i].type == '+' || tokens[i].type == '-'){
+      if (priority < 2){
+        op_index = i;
+        priority = 2;
+    }
+    } else if (tokens[i].type == '*' || tokens[i].type == '/'){
+      if (priority < 1){
+        op_index = i;
+        priority = 1;
+      }
+    }
+    else if (unmatched < 0){
+      return -2;
+    }
+  }
+  }
+  return op_index;
+}
+
+uint32_t eval(int p, int q){
+  int result = 0;
+  if (p > q){
+    assert(0);
+  } 
+  else if (p == q){
+    if (tokens[p].type == TK_NUM){
+      sscanf(tokens[p].str, "%u", &result);
+      return result;
+    }
+	else if (tokens[p].type == TK_HEX){
+		int i = 2;
+		while (tokens[p].str[i]!=0){
+			result *=16;
+			result += tokens[p].str[i] <58 ? tokens[p].str[i]-'0':tokens[p].str[i] - 'a' +10;
+			i++;
+		}
+		return result;
+	} 
+    else if (tokens[p].type == TK_REGISTER){
+      if (!strcmp(tokens[p].str, "$eax")){
+        return cpu.eax;
+      } else if (!strcmp(tokens[p].str, "$ecx")){
+    	return cpu.ecx;
+      } else if (!strcmp(tokens[p].str, "$edx")){
+    	return cpu.edx;
+      } else if (!strcmp(tokens[p].str, "$ebx")){
+    	return cpu.ebx;
+      } else if (!strcmp(tokens[p].str, "$esp")){
+    	return cpu.esp;
+     } else if (!strcmp(tokens[p].str, "$ebp")){
+    	return cpu.ebp;
+     } else if (!strcmp(tokens[p].str, "$esi")){
+    	return cpu.esi;
+     } else if (!strcmp(tokens[p].str, "$edi")){
+    	return cpu.edi;
+     } else if (!strcmp(tokens[p].str, "$eip")){
+    	return cpu.eip;
+    } else {
+        return 0;
+    }
+    } else {
+        assert(0);
+     }
+  } 
+  else if (check_parentheses(p, q) == true){
+    return eval(p + 1, q - 1);
+  } 
+  else {
+    int op_index = dominant_operator(p, q);
+    if (op_index == -2){
+        assert(0);
+    } 
+  else if (op_index == -1){
+
+	if (tokens[p].type == '!'){
+		sscanf(tokens[q].str, "%d", &result);
+		return !result;
+	}
+	else if(tokens[p].type == TK_NEG){
+		sscanf(tokens[q].str, "%d", &result);
+		return -result;
+	}
+	else if(tokens[p].type == TK_POINT){
+		if (!strcmp(tokens[q].str, "$eax")){
+			result = vaddr_read(cpu.eax, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$ecx")){
+			result = vaddr_read(cpu.ecx, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$edx")){
+			result = vaddr_read(cpu.edx, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$ebx")){
+			result = vaddr_read(cpu.ebx, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$esp")){
+			result = vaddr_read(cpu.esp, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$ebp")){
+			
+			result = vaddr_read(cpu.ebp, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$esi")){
+			result = vaddr_read(cpu.esi, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$edi")){
+			result = vaddr_read(cpu.edi, 4);
+			return result;
+		} else if (!strcmp(tokens[q].str, "$eip")){
+			result = vaddr_read(cpu.eip, 4);
+			return result;
+		}
+	}
+}
+    else if (tokens[p].type == TK_REGISTER) {
+      if (!strcmp(tokens[p].str, "$eax")){
+    	return cpu.eax;
+      } else if (!strcmp(tokens[p].str, "$ecx")){
+    	return cpu.ecx;
+      } else if (!strcmp(tokens[p].str, "$edx")){
+    	return cpu.edx;
+    } else if (!strcmp(tokens[p].str, "$ebx")){
+    	return cpu.ebx;
+    } else if (!strcmp(tokens[p].str, "$esp")){
+    	return cpu.esp;
+    } else if (!strcmp(tokens[p].str, "$ebp")){
+    	return cpu.ebp;
+    } else if (!strcmp(tokens[p].str, "$esi")){
+    	return cpu.esi;
+    } else if (!strcmp(tokens[p].str, "$edi")){
+    	return cpu.edi;
+    } else if (!strcmp(tokens[p].str, "$eip")){
+    	return cpu.eip;
+    } else {
+    	assert(0);
+    }
+  }
+  uint32_t val1, val2;
+  val1 = eval(p, op_index - 1);
+  val2 = eval(op_index + 1, q);
+
+  switch (tokens[op_index].type){
+  	case '+' : return val1 + val2;	
+  	case '-' : return val1 - val2;
+  	case '*' : return val1 * val2;
+  	case '/' : return val1 / val2;
+  	case TK_OR : return val1 || val2;
+  	case TK_AND : return val1 && val2;
+  	case TK_EQ : 
+       if (val1 == val2){
+    	return 1;
+       } else {
+    	return 0;
+       }
+  	case TK_NOTEQ :
+       if (val1 != val2){
+    	return 1;
+        } else {
+    	return 0;
+        }
+  default : assert(0);
+  }
+ }
+  return 0;
+}
 uint32_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
@@ -103,7 +417,5 @@ uint32_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
-
-  return 0;
+  return eval (0,nr_token - 1);
 }

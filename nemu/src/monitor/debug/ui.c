@@ -38,6 +38,101 @@ static int cmd_q(char *args) {
 
 static int cmd_help(char *args);
 
+
+static int cmd_si(char *args){
+  int steps;
+  if (args ==NULL){
+    steps=1;
+  }
+  else { 
+    sscanf(args,"%d",&steps);
+  }
+  cpu_exec(steps);
+  return 0;
+}
+	
+static int cmd_info(char *args) {
+  if (args[0] == 'r') {
+     printf("General reg: ----------------------------------------------------------- \n");
+     int i;
+     for (i = 0; i < 8 ; i++) {
+	printf("$%s\t0x%08x\t%d\n", regsl[i], reg_l(i),reg_l(i) );
+     }
+     printf("Special reg: ----------------------------------------------------------- \n");	
+     printf("$eip\t0x%08x\t%d\n", cpu.eip, cpu.eip);
+  }
+  if (args[0] == 'w'){
+		printf_wp();
+		return 0;
+  }
+  return 0;
+}
+
+static int cmd_x(char* args){
+  if (args == NULL) {
+    printf("ERORR!\n");
+    return 0;
+  }
+  int num;
+  char exp[100];
+  bool success = true;
+  sscanf(args, "%d %s", &num, exp);
+  uint32_t addr = expr(exp, &success);
+  int j=0;
+  for (int i = 0; i < num; i++) {
+    if (j % 4 == 0){
+      printf("0x%x:\t", addr);
+    }
+    printf("0x%08x ", vaddr_read(addr, 4));
+    addr +=4;
+    j++;
+    if ( j % 4 == 0){
+      printf ("\n");
+    }
+  }
+  printf("\n");
+  return 0;
+}
+static int cmd_p(char *args){
+  bool success = true;
+  uint32_t result = expr (args, &success);
+  if (!success) {
+    printf("wrong!\n");
+  }
+  else {
+    printf("%u\n",result);
+  }
+  return 0;
+}
+static int cmd_w(char* args) {
+  bool success = true;
+  uint32_t result = expr(args, &success);
+  if(!success) {
+    printf("wrong expression!\n");
+    return -1;
+  }
+  WP* wp = new_wp();
+  wp->result = result;
+  strcpy(wp->expr, args);
+  printf("watchpoint %d: %s\n", wp->NO, wp->expr);
+  return 0;
+}
+static int cmd_d(char *args){
+	int p;
+	bool key = true;
+	sscanf(args, "%d", &p);
+	WP* q = delete_wp(p, &key);
+	if (key){
+		printf("Delete watchpoint %d: %s\n", q->NO, q->expr);
+		free_wp(q);
+		return 0;
+	} else {
+		printf("No found watchpoint %d\n", p);
+		return 0;
+	}
+	return 0;
+}
+
 static struct {
   char *name;
   char *description;
@@ -46,9 +141,13 @@ static struct {
   { "help", "Display informations about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
   /* TODO: Add more commands */
-
+  { "si", "Pause the execution after stepping N commands", cmd_si},
+  { "info", "Print registers status", cmd_info},
+  { "x", "Scan memory", cmd_x},
+  { "p", "Expression evaluation", cmd_p},
+  { "w", "new a watchpoint", cmd_w},
+  { "d", "Delete watchpoint", cmd_d},
 };
 
 #define NR_CMD (sizeof(cmd_table) / sizeof(cmd_table[0]))
